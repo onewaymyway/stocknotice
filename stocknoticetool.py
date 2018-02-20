@@ -8,6 +8,8 @@ import datetime
 import re
 import pandas as pd
 import tushare as ts
+import sys
+import os
 
 stockBasicInfo=None
 myG={}
@@ -202,11 +204,13 @@ def list2DF(dataList,keys):
         data.append(tData)
     df=pd.DataFrame(data, columns=keys) 
     return df
-            
+def getStockSavePath(code):
+    return savePath+code+".csv"  
+  
 def saveStockData(code,dataList):
     sortDataList(dataList)
     df=list2DF(dataList,["date","title","url"])
-    df.to_csv(savePath+code+".csv",index=False)
+    df.to_csv(getStockSavePath(code),index=False)
 
 def getToday():
     now=datetime.datetime.now()
@@ -254,7 +258,7 @@ def getStockBeginDay(stock):
     date = df.ix[stock]['timeToMarket'] #上市日期YYYYMMDD
     #print(df.ix[stock])
     #print(date)
-    
+    print(date,df.ix[stock])
     timeArray = time.strptime(str(date),'%Y%m%d')
     newdate=time.strftime("%Y-%m-%d",timeArray)
     return newdate
@@ -277,16 +281,37 @@ def getStockNotice(code):
         return None
     saveStockData(code,datas)
     
-def beginWork():
-    initStockBasic(True)
+def beginWork(reverse=False,skipExist=False):
+    initStockBasic(False)
     stocks=myG["codes"]
+    if reverse==True:
+        print("reverse")
+        stocks.reverse()
     for stock in stocks:
         try:
             print("work:",stock)
+            if skipExist and os.path.exists(getStockSavePath(stock)):
+                continue;
             getStockNotice(stock)
-        except:
+        except Exception as err:
+            print(err)
             print("fail:",stock)
             time.sleep(5)
         
         
-beginWork()
+#beginWork()
+print(sys.argv)
+print(__name__)
+if __name__=="__main__" :
+    
+    print(sys.argv)
+    if len(sys.argv)==2:
+        workType=sys.argv[1]
+        print(workType)
+        if workType=="getdataR":
+            beginWork(True,True)
+        if workType=="getdata":
+            beginWork(False,True)
+    else:
+        #beginWork()
+        pass
