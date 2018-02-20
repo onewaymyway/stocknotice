@@ -10,6 +10,8 @@ import pandas as pd
 import tushare as ts
 import sys
 import os
+import socket
+socket.setdefaulttimeout(5)
 
 stockBasicInfo=None
 myG={}
