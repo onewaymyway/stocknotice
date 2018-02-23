@@ -212,7 +212,7 @@ def getStockSavePath(code):
 def saveStockData(code,dataList):
     sortDataList(dataList)
     df=list2DF(dataList,["date","title","url"])
-    df.to_csv(getStockSavePath(code),index=False)
+    df.to_csv(getStockSavePath(code),index=False,encoding = "utf-8")
 
 def getToday():
     now=datetime.datetime.now()
