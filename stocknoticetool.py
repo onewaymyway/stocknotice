@@ -31,7 +31,7 @@ valuesSH = {
      'reportType' : 'ALL',
      'beginDate' : '2017-10-31',
           'endDate' : '2018-01-30',
-           'pageHelp.pageSize' : 999,
+           'pageHelp.pageSize' : 9999,
      'pageHelp.pageCount' : 50,
      'pageHelp.pageNo' : '1',
      'pageHelp.beginPage' : '1',
@@ -40,6 +40,25 @@ valuesSH = {
           '_' : '1405057078095'
          }
 
+valuesAllSH = {
+          #'cb' : 'jQuery110209612188022583723_1405057078072',
+          'jsonCallBack' : 'jsonpCallBack334',
+     'isPagination' : True,
+     'productId' : '',
+     'keyWord' : '',
+     'isNew' : 1,
+     'reportType2' : '',
+     'reportType' : 'ALL',
+     'beginDate' : '2017-10-31',
+          'endDate' : '2018-01-30',
+           'pageHelp.pageSize' : 9999,
+     'pageHelp.pageCount' : 50,
+     'pageHelp.pageNo' : '1',
+     'pageHelp.beginPage' : '1',
+     'pageHelp.cacheSize' : '1',
+     'pageHelp.endPage' : '5',
+          '_' : '1405057078095'
+         }
 
 headersSH = {
     'Accept' : '*/*',
@@ -131,11 +150,17 @@ def getSZStock(code,begin="2006-01-31",end="2018-02-20"):
     tList,pageO=getSZNotice(code,begin,end,1)
     rstList=rstList+tList
     while pageO["page"]<pageO["total"]:
-        
+        #print(pageO["page"],pageO["total"])
         tList,pageO=getSZNotice(code,begin,end,pageO["page"]+1)
         rstList=rstList+tList
     
     return rstList
+    
+def getAllSZStock(begin="2018-02-22",end="2018-02-25"):
+    rst=getSZStock("",begin,end)
+    #print(rst)
+    #print(len(rst))
+    return rst
 
 def removeJsonPStr(jsonpStr):
     pos=jsonpStr.find("(")
@@ -144,6 +169,7 @@ def removeJsonPStr(jsonpStr):
     jsonStr=jsonStr[:pos]
     return jsonStr
 def getOneSHStock(code,begin="2006-01-31",end="2018-02-20"):
+    url = 'http://query.sse.com.cn/security/stock/queryCompanyStatementNew.do'
     valuesSH["productId"]=code
     valuesSH["isPagination"]=False
     valuesSH["beginDate"]=begin
@@ -171,6 +197,35 @@ def getOneSHStock(code,begin="2006-01-31",end="2018-02-20"):
     #print(len(mlist))
     return mlist
 
+def getAllSHStock(begin="2018-02-15",end="2018-02-25"):
+    url = 'http://query.sse.com.cn/infodisplay/queryLatestBulletinNew.do'
+   
+    valuesAllSH["isPagination"]=False
+    valuesAllSH["beginDate"]=begin
+    valuesAllSH["endDate"]=end
+    data = urllib.parse.urlencode(valuesAllSH)
+    turl=url+"?"+data;
+    req = urllib.request.Request(turl, None, headersSH)
+    response = urllib.request.urlopen(req)
+    the_page = response.read()
+    tStr=the_page.decode("utf8")
+    #print("tStr",tStr)
+    tStr=removeJsonPStr(tStr) 
+    
+    jsonData=json.loads(tStr);
+    #print(jsonData)
+    nlist=jsonData["result"]
+    mlist=[]
+    for tnotice in nlist:
+        nt={}
+        nt["date"]=tnotice["SSEDate"]
+        nt["url"]=tnotice["URL"]
+        nt["title"]=tnotice["title"]
+        #print(nt["date"])
+        mlist.append(nt)
+    #print(mlist)
+    #print(len(mlist))
+    return mlist
 def getDayPairs(begin_date,end_date,dDate=1000):
     pairList=[]
     begin_date = datetime.datetime.strptime(begin_date, "%Y-%m-%d")  
@@ -300,7 +355,10 @@ def beginWork(reverse=False,skipExist=False):
             print("fail:",stock)
             time.sleep(5)
         
-        
+def testWork():
+    #getAllSHStock()
+    getAllSZStock()
+    pass       
 #beginWork()
 print(sys.argv)
 print(__name__)
@@ -315,5 +373,4 @@ if __name__=="__main__" :
         if workType=="getdata":
             beginWork(False,True)
     else:
-        #beginWork()
-        pass
+        testWork()
