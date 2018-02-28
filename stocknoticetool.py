@@ -191,6 +191,7 @@ def getOneSHStock(code,begin="2006-01-31",end="2018-02-20"):
         nt["date"]=tnotice["SSEDate"]
         nt["url"]=tnotice["URL"]
         nt["title"]=tnotice["title"]
+        nt["code"]=tnotice["security_Code"]
         #print(nt["date"])
         mlist.append(nt)
     #print(mlist)
@@ -221,6 +222,7 @@ def getAllSHStock(begin="2018-02-15",end="2018-02-25"):
         nt["date"]=tnotice["SSEDate"]
         nt["url"]=tnotice["URL"]
         nt["title"]=tnotice["title"]
+        nt["code"]=tnotice["security_Code"]
         #print(nt["date"])
         mlist.append(nt)
     #print(mlist)
@@ -296,10 +298,14 @@ def initStockBasic(useNet=False):
 
     #print(stockBasicInfo)
     codes=list(stockBasicInfo.index)
+    names=list(stockBasicInfo["name"])
+    nameDic={}
     for i in range(0,len(codes)):
         codes[i]=getOKStockCode(codes[i])
-    print(codes)
+        nameDic[names[i]]=codes[i]
+    #print(codes)
     myG["codes"]=codes
+    myG["nameDic"]=nameDic
 
         
     stockBasicInfo.to_csv("stockinfo.csv",encoding="utf8")
@@ -354,10 +360,45 @@ def beginWork(reverse=False,skipExist=False):
             print(err)
             print("fail:",stock)
             time.sleep(5)
+
+def getStockCodeByStockName(name):
+    global stockBasicInfo,myG
+    if not "nameDic" in myG:
+        initStockBasic()
+    nameDic=myG["nameDic"]
+    if name in nameDic:
+        return nameDic[name]
+    print("stock code not found:",name)
+    return name;
+
+def updateByNoticeList(noticeList):
+    for notice in noticeList:
+        title=notice["title"]
+        if "code" in notice:
+            code=notice["code"]
+        else:
+            arr=title.split("：")
+            stockName=arr[0]
+            code=getStockCodeByStockName(stockName)
+            
         
+        print(code,title)
+    pass
+def updateByDate(date):
+    noticeList=getAllSZStock(date,date)
+    updateByNoticeList(noticeList)
+    noticeList=getAllSHStock(date,date)
+    #updateByNoticeList(noticeList)
+    pass
+def updateWork():
+    pass
+           
 def testWork():
+    initStockBasic()
     #getAllSHStock()
-    getAllSZStock()
+    #slist=getAllSZStock()
+    #print(slist)
+    updateByDate(getToday())
     pass       
 #beginWork()
 print(sys.argv)
